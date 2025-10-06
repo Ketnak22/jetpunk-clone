@@ -115,8 +115,6 @@ export function Uploader() {
                                 placeholder={path.id || ''}
                                 ref={el => { inputRefs.current[i] = el; }}
                                 onFocus={() => setHoveredIndex(i)}
-                                onMouseEnter={() => setHoveredIndex(i)}
-                                onMouseLeave={() => setHoveredIndex(null)}
                             />
                         ))}
                     </div>
