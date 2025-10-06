@@ -1,0 +1,69 @@
+
+
+.uploader:focus {
+  outline: none;
+}
+
+.uploader--focus {
+  transform: translateY(-2px);
+}
+
+.uploader--active {
+  border-color: var(--uploader-border-active);
+  box-shadow: 0 10px 30px rgba(59, 130, 246, 0.12);
+  transform: translateY(-4px) scale(1.01);
+}
+
+.uploader__content {
+  text-align: center;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  pointer-events: none; /* so the input receives clicks */
+  user-select: none;
+}
+
+.uploader__icon {
+  width: 48px;
+  height: 48px;
+  fill: var(--uploader-border);
+  transition: fill 160ms ease, transform 160ms ease;
+}
+
+.uploader--active .uploader__icon {
+  fill: var(--uploader-border-active);
+  transform: translateY(-2px);
+}
+
+.uploader__text {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #0f172a; /* slate-900-ish */
+}
+
+.uploader__hint {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #64748b; /* slate-500 */
+}
+
+/* Small responsive behaviour */
+@media (max-width: 420px) {
+  .uploader {
+    padding: 0.75rem;
+  }
+  .uploader__icon {
+    width: 40px;
+    height: 40px;
+  }
+  .uploader__text {
+    font-size: 0.9rem;
+  }
+}
+
+/* Optional: add a nice hover for pointer devices */
+.uploader:hover {
+  transform: translateY(-2px);
+}
