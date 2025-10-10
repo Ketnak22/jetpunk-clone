@@ -3,8 +3,21 @@ import './Uploader.css';
 
 import { useState, useRef, useEffect } from 'react';
 
+import { v4 as uuidv4 } from 'uuid';
+
 interface PathStyle {
     fill?: string;
+}
+
+type IdPathMapping = {
+    [key: string]: string;
+}
+
+type TableList = Array<string>;
+
+interface SentJson {
+    name: string;
+    data: IdPathMapping | TableList;
 }
 
 export function Uploader() {
@@ -145,26 +158,52 @@ export function Uploader() {
                                 const doc = parser.parseFromString(originalSvgContent, 'image/svg+xml');
                                 const pathNodes = doc.querySelectorAll('path');
 
-                                // Replace ids with input values or empty string when disabled
-                                pathNodes.forEach((path, i) => {
-                                    if (inputRefs.current[i]?.disabled) {
-                                        path.setAttribute('id', '');
-                                        return;
-                                    }
-                                    path.setAttribute('id', inputRefs.current[i]?.value || path.id || '');
-                                });
-                                
                                 // Serialize SVG
                                 const serializer = new XMLSerializer();
                                 const newSvg = serializer.serializeToString(doc.documentElement);
                                 const svgBlob = new Blob([newSvg], { type: 'image/svg+xml' });
                                 const svgUrl = URL.createObjectURL(svgBlob);
 
-                                const newTab = window.open();
-                                if (newTab) {
-                                    newTab.document.write(`<iframe src="${svgUrl}" frameborder="0" style="width:100%;height:100%;" />`);
-                                    newTab.document.close();
-                                }
+                                // Create mapping of original ids to new ids
+                                const pathIdMapping: IdPathMapping = {};
+
+                                // Replace ids with input values or empty string when disabled
+                                pathNodes.forEach((path, i) => {
+                                    if (inputRefs.current[i]?.disabled) return;
+                                    if (path.id) {
+                                        pathIdMapping[path.id] = inputRefs.current[i]?.value || path.id;
+                                    }
+                                });
+
+                                const formData = new FormData();
+                                formData.append('svg', svgBlob, 'map.svg');
+                                const jsonData = pathIdMapping ? JSON.stringify({
+                                    name: 'toBeChanged',
+                                    data: pathIdMapping,
+                                }) : '{}';
+                                const jsonBlob = new Blob([jsonData], { type: 'application/json' });
+                                formData.append('json', jsonBlob, 'data.json');
+
+
+                                fetch('http://localhost:3000/api/uploadMap', {
+                                    mode: 'no-cors',
+                                    method: 'POST',
+                                    body: formData,
+                                }).then(response => {
+                                    if (response.status === 200) {
+                                        console.log('Map uploaded successfully');
+                                    } else {
+                                        console.error('Error uploading map');
+                                    }
+                                }).catch(error => {
+                                    console.error('Error uploading map:', error);
+                                })
+
+                                /* TODO
+                                - handle response properly
+                                - exit to main page after upload
+                                */
+
                             }}>Wyślij</button>
                         </div>
                     </div>
