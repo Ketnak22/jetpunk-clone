@@ -10,6 +10,7 @@ interface PathStyle {
 export function Uploader() {
     const containerRef = useRef<HTMLDivElement>(null);
     const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
+    const buttonRefs = useRef<Array<HTMLButtonElement | null>>([]);
 
     const [svgContent, setSvgContent] = useState<string | null>(null);
     const [originalSvgContent, setOriginalSvgContent] = useState<string | null>(null);
@@ -99,13 +100,39 @@ export function Uploader() {
                     <div className='uploader-interaction'>
                         <div className='uploader-input-list'>
                             {paths.map((path: SVGPathElement, i: number) => (
-                                <input
-                                    type="text"
-                                    key={i}
-                                    placeholder={path.id || ''}
-                                    ref={el => { inputRefs.current[i] = el; }}
-                                    onFocus={() => setHoveredIndex(i)}
-                                />
+                                <div className='uploader-input' key={i}>
+                                    <input
+                                        type="text"
+                                        placeholder={path.id || ''}
+                                        ref={el => { inputRefs.current[i] = el; }}
+                                        onFocus={() => setHoveredIndex(i)}
+                                        onMouseEnter={() => setHoveredIndex(i)}
+                                    />
+                                    <button 
+                                        className='uploader-input-btn'
+                                        ref={el => { buttonRefs.current[i] = el } } 
+                                        onClick={() => {
+                                        if (inputRefs.current[i]) {
+                                            if (inputRefs.current[i]!.disabled) {
+                                                inputRefs.current[i]!.disabled = false;      
+
+                                                buttonRefs.current[i]!.textContent = 'X';
+                                                buttonRefs.current[i]!.style.backgroundColor = '#ff4d4f'; // light red
+                                            } else {
+                                                inputRefs.current[i]!.disabled = true;
+
+                                                inputRefs.current[i]!.value = '';
+                                                inputRefs.current[i]!.placeholder = path.id || '';
+                                            
+                                                buttonRefs.current[i]!.textContent = '↺';
+                                                buttonRefs.current[i]!.style.backgroundColor = '#f0ad4e'; // light orange
+                                            }
+                                        }
+                                        const updatedPaths = [...paths];
+                                        updatedPaths[i].id = '';
+                                        setPaths(updatedPaths);
+                                    }}>X</button>
+                                </div>
                             ))}
                         </div>
 
@@ -118,11 +145,15 @@ export function Uploader() {
                                 const doc = parser.parseFromString(originalSvgContent, 'image/svg+xml');
                                 const pathNodes = doc.querySelectorAll('path');
 
-                                // Replace ids with input values
+                                // Replace ids with input values or empty string when disabled
                                 pathNodes.forEach((path, i) => {
+                                    if (inputRefs.current[i]?.disabled) {
+                                        path.setAttribute('id', '');
+                                        return;
+                                    }
                                     path.setAttribute('id', inputRefs.current[i]?.value || path.id || '');
                                 });
-
+                                
                                 // Serialize SVG
                                 const serializer = new XMLSerializer();
                                 const newSvg = serializer.serializeToString(doc.documentElement);
@@ -134,11 +165,6 @@ export function Uploader() {
                                     newTab.document.write(`<iframe src="${svgUrl}" frameborder="0" style="width:100%;height:100%;" />`);
                                     newTab.document.close();
                                 }
-
-                                /* TODO:
-                                 - Write empty id if input corresponding to path is empty
-                                 - Add ignore button for each input (write empty id for corresponding path)
-                                */
                             }}>Wyślij</button>
                         </div>
                     </div>

@@ -62,6 +62,9 @@ export function Map({ url }: MapProps) {
             <input
                 type="text"
                 ref={inputRef}
+                autoComplete="false"
+                autoCapitalize="none"
+                autoCorrect="false"
                 onChange={() => setInputValue(inputRef.current?.value || "")}
                 placeholder="Wpisz..."
             />
