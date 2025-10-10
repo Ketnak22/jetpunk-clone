@@ -3,8 +3,6 @@ import './Uploader.css';
 
 import { useState, useRef, useEffect } from 'react';
 
-import { v4 as uuidv4 } from 'uuid';
-
 interface PathStyle {
     fill?: string;
 }
@@ -24,6 +22,7 @@ export function Uploader() {
     const containerRef = useRef<HTMLDivElement>(null);
     const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
     const buttonRefs = useRef<Array<HTMLButtonElement | null>>([]);
+    const nameInputRef = useRef<HTMLInputElement | null>(null);
 
     const [svgContent, setSvgContent] = useState<string | null>(null);
     const [originalSvgContent, setOriginalSvgContent] = useState<string | null>(null);
@@ -149,9 +148,16 @@ export function Uploader() {
                             ))}
                         </div>
 
-                        <div className='uploader-btn-div'>
+                        <div className='uploader-down-div'>
+                            <input 
+                                type='text'
+                                ref={nameInputRef}
+                                placeholder='Wpisz nazwę mapy...'
+                                className='uploader-name-input'
+                            />
                             <button className='uploader-btn' onClick={() => {
                                 if (!originalSvgContent) return;
+                                if (!nameInputRef.current?.value) return;
 
                                 // Parse original SVG
                                 const parser = new DOMParser();
@@ -162,7 +168,6 @@ export function Uploader() {
                                 const serializer = new XMLSerializer();
                                 const newSvg = serializer.serializeToString(doc.documentElement);
                                 const svgBlob = new Blob([newSvg], { type: 'image/svg+xml' });
-                                const svgUrl = URL.createObjectURL(svgBlob);
 
                                 // Create mapping of original ids to new ids
                                 const pathIdMapping: IdPathMapping = {};
@@ -178,7 +183,7 @@ export function Uploader() {
                                 const formData = new FormData();
                                 formData.append('svg', svgBlob, 'map.svg');
                                 const jsonData = pathIdMapping ? JSON.stringify({
-                                    name: 'toBeChanged',
+                                    name: nameInputRef.current.value,
                                     data: pathIdMapping,
                                 }) : '{}';
                                 const jsonBlob = new Blob([jsonData], { type: 'application/json' });
