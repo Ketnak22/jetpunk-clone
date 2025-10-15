@@ -13,11 +13,6 @@ type IdPathMapping = {
 
 type TableList = Array<string>;
 
-interface SentJson {
-    name: string;
-    data: IdPathMapping | TableList;
-}
-
 export function Uploader() {
     const containerRef = useRef<HTMLDivElement>(null);
     const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
@@ -115,6 +110,7 @@ export function Uploader() {
                                 <div className='uploader-input' key={i}>
                                     <input
                                         type="text"
+                                        maxLength={100}
                                         placeholder={path.id || ''}
                                         ref={el => { inputRefs.current[i] = el; }}
                                         onFocus={() => setHoveredIndex(i)}
@@ -182,23 +178,21 @@ export function Uploader() {
 
                                 const formData = new FormData();
                                 formData.append('svg', svgBlob, 'map.svg');
-                                const jsonData = pathIdMapping ? JSON.stringify({
-                                    name: nameInputRef.current.value,
-                                    data: pathIdMapping,
-                                }) : '{}';
+                                const jsonData = pathIdMapping ? JSON.stringify(pathIdMapping) : '{}';
                                 const jsonBlob = new Blob([jsonData], { type: 'application/json' });
                                 formData.append('json', jsonBlob, 'data.json');
-
+                                formData.append('name', nameInputRef.current.value);
 
                                 fetch('http://localhost:3000/api/uploadMap', {
-                                    mode: 'no-cors',
                                     method: 'POST',
                                     body: formData,
                                 }).then(response => {
                                     if (response.status === 200) {
                                         console.log('Map uploaded successfully');
                                     } else {
-                                        console.error('Error uploading map');
+                                        response.text().then(errorText => {
+                                            console.error(`Error uploading map: ${response.status} - ${errorText}`);
+                                        });
                                     }
                                 }).catch(error => {
                                     console.error('Error uploading map:', error);
@@ -207,6 +201,7 @@ export function Uploader() {
                                 /* TODO
                                 - handle response properly
                                 - exit to main page after upload
+                                - validate data on backend and frontend (name, filenames length) using some kind of library
                                 */
 
                             }}>Wyślij</button>
